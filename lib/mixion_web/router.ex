@@ -18,6 +18,21 @@ defmodule MixionWeb.Router do
     pipe_through :browser
 
     get "/", PageController, :home
+
+    live "/recipes", RecipeLive.Index, :index
+    live "/recipes/new", RecipeLive.Index, :new
+    live "/recipes/:id/edit", RecipeLive.Index, :edit
+
+    live "/recipes/:id", RecipeLive.Show, :show
+    live "/recipes/:id/show/edit", RecipeLive.Show, :edit
+
+    live "/orders", OrderLive.Index, :index
+    live "/orders/new", OrderLive.Index, :new
+    live "/orders/:id/edit", OrderLive.Index, :edit
+
+    live "/orders/:id", OrderLive.Show, :show
+    live "/orders/:id/show/edit", OrderLive.Show, :edit
+
   end
 
   # Other scopes may use custom stacks.
