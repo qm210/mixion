@@ -6,7 +6,10 @@ defmodule MixionWeb.OrderLive.Index do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, stream(socket, :orders, Orders.list_orders())}
+    orders = Orders.list_orders()
+    recipes = Mixion.Recipes.list_recipes()
+    {:ok, socket |> assign(:orders, orders) |> assign(:recipes, recipes)}
+    # {:ok, stream(socket, :orders, Orders.list_orders())}
   end
 
   @impl true

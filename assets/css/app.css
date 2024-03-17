@@ -3,3 +3,12 @@
 @import "tailwindcss/utilities";
 
 /* This file is for your main application CSS */
+
+.new-order-table {
+    width: 100%;
+}
+
+.new-order-table td {
+    width: 0;
+    padding: 1rem;
+}

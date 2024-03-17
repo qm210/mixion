@@ -9,7 +9,7 @@
 
 <.table
   id="orders"
-  rows={@streams.orders}
+  rows={@orders}
   row_click={fn {_id, order} -> JS.navigate(~p"/orders/#{order}") end}
 >
   <:col :let={{_id, order}} label="Timestamp"><%= order.timestamp %></:col>
@@ -30,13 +30,25 @@
   </:action>
 </.table>
 
-<.modal :if={@live_action in [:new, :edit]} id="order-modal" show on_cancel={JS.patch(~p"/orders")}>
+<.modal :if={@live_action == :edit} id="order-modal" show on_cancel={JS.patch(~p"/orders")}>
   <.live_component
     module={MixionWeb.OrderLive.FormComponent}
-    id={@order.id || :new}
+    id={@order.id}
     title={@page_title}
     action={@live_action}
     order={@order}
     patch={~p"/orders"}
   />
 </.modal>
+
+<.modal :if={@live_action in [:new]} id="new-order-modal" show on_cancel={JS.patch(~p"/orders")}>
+    <.live_component
+      module={MixionWeb.OrderLive.NewOrderComponent}
+      id={:new}
+      title={@page_title}
+      action={@live_action}
+      order={@order}
+      patch={~p"/orders"}
+      recipes={@recipes}
+    />
+  </.modal>
