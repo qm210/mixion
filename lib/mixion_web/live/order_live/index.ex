@@ -38,6 +38,13 @@ defmodule MixionWeb.OrderLive.Index do
     {:noreply, stream_insert(socket, :orders, order)}
   end
 
+  # Wasserträger, lel
+  def handle_info({:increment_event, params}, socket) do
+    IO.inspect params
+    # send(:new_order_component, {:increment_event, params})  fails
+    {:noreply, socket}
+  end
+
   @impl true
   def handle_event("delete", %{"id" => id}, socket) do
     order = Orders.get_order!(id)
@@ -47,8 +54,8 @@ defmodule MixionWeb.OrderLive.Index do
   end
 
   @impl true
-  def handle_event("submit", _params, socket) do
-    IO.inspect(_params, label: "OUTSIDE SUBMIT")
+  def handle_event("submit", params, socket) do
+    IO.inspect(params, label: "OUTSIDE SUBMIT")
     {:noreply, socket}
   end
 end

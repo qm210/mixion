@@ -3,30 +3,46 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
 
   alias Mixion.Orders
 
+  @impl true
   def mount(socket) do
     recipes = Mixion.Recipes.list_recipes()
+    bartenders = Mixion.Bartenders.all()
+    IO.inspect(bartenders, label: "Bartenders")
+
+    # counts = Enum.into(
+    #   recipes,
+    #   %{},
+    #   fn recipe ->
+    #     {recipe.id, %{left: 0, right: 0}}
+    #   end
+    # )
+
     counts = Enum.into(
       recipes,
       %{},
       fn recipe ->
-        {recipe.id, %{left: 0, right: 0}}
+        # bartender_map = Enum.reduce(
+        #   bartenders,
+        #   %{},
+        #   fn key, acc ->
+        #     Map.put(acc, key, 0)
+        #   end
+        # )
+        bartender_map = Enum.into(
+          bartenders,
+          %{},
+          fn bartender -> {bartender, 0} end
+        )
+        {recipe.id, bartender_map}
       end
     )
-    IO.inspect(counts, label: "Counts")
 
     {:ok,
       socket
       |> assign(:recipes, recipes)
       |> assign(:counts, counts)
+      |> assign(:bartenders, bartenders)
     }
-  end
-
-  @impl true
-  def handle_event("submit", _params, socket) do
-    IO.inspect(_params, label: "INSIDE SUBMIT")
-    # Your logic here for handling the right_click event
-    # For example, you might want to update some state or perform an action
-    {:noreply, socket}
   end
 
   @impl true
@@ -46,24 +62,18 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
                 <td style="width: 100%">
                   <%= recipe.name %>
                 </td>
-                <td>
-                  <span :if={@counts[recipe.id].left > 0}>
-                    <%= @counts[recipe.id].left %>
-                  </span>
-                  <.button
-                    phx-click="increment"
-                    phx-value-recipe_id={recipe.id}
-                    phx-value-bartender="left">
-                    Left
-                  </.button>
-                </td>
-                <td>
-    <!-- TODO: Vorhergehende Zelle mal auslagern in eigene Funktionalkomponente, nur noch duplizieren -->
-                  <span :if={@counts[recipe.id].right > 0}>
-                    <%= @counts[recipe.id].right %>
-                  </span>
-                  <.button>Right</.button>
-                </td>
+                <%= for bartender <- @bartenders do %>
+                  <td>
+                    <.live_component
+                      module = {MixionWeb.OrderLive.OrderCountButton}
+                      id = {"count-#{recipe.id}-#{bartender}"}
+                      parent_pid = {self()}
+                      counts = {@counts[recipe.id]}
+                      recipe_id = {recipe.id}
+                      bartender = {bartender}
+                    />
+                  </td>
+                <% end %>
               </tr>
             <% end %>
 
@@ -77,21 +87,6 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
     </div>
     """
   end
-
-  #
-#  def handle_event("increment", %{"recipe_id" => recipe_id, "bartender" => bartender}, socket) do
-#    IO.inspect(socket.assigns.counts, label: "Increased counts")
-#    #counts = update_in(socket.assigns.counts[recipe_id], &(&1 + 1))
-#    {:noreply, assign(socket, counts: socket.assigns.counts)}
-#    # {:noreply, socket |> assign(:counts, counts)}
-#  end
-#
-#  def handle_event("debug", _params, socket) do
-#    # Your logic here for handling the debug event
-#    {:noreply, socket}
-#  end
-
-  # from here, the default stuff
 
   @impl true
   def update(%{order: order} = assigns, socket) do
@@ -113,8 +108,40 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
     {:noreply, assign_form(socket, changeset)}
   end
 
+  @impl true
   def handle_event("save", %{"order" => order_params}, socket) do
     save_order(socket, socket.assigns.action, order_params)
+  end
+
+  @impl true
+  def handle_event("submit", params, socket) do
+    IO.inspect(params, label: "INSIDE SUBMIT")
+    # Your logic here for handling the right_click event
+    # For example, you might want to update some state or perform an action
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("increment", params, socket) do
+    IO.inspect(params, label: "outer increment")
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event(:increment, params, socket) do
+    IO.inspect(params, label: "outer :increment")
+    {:noreply, socket}
+  end
+
+  def handle_info({:increment, params}, socket) do
+    IO.inspect(params, label: "Outer increment handle_info")
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:increment_event, params}, socket) do
+    IO.inspect(params, label: "Outer increment_event handle_info")
+    {:noreply, socket}
   end
 
   defp save_order(socket, :edit, order_params) do
