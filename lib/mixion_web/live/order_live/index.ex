@@ -7,9 +7,7 @@ defmodule MixionWeb.OrderLive.Index do
   @impl true
   def mount(_params, _session, socket) do
     orders = Orders.list_orders()
-    recipes = Mixion.Recipes.list_recipes()
-    {:ok, socket |> assign(:orders, orders) |> assign(:recipes, recipes)}
-    # {:ok, stream(socket, :orders, Orders.list_orders())}
+    {:ok, stream(socket, :orders, orders)}
   end
 
   @impl true
@@ -46,5 +44,11 @@ defmodule MixionWeb.OrderLive.Index do
     {:ok, _} = Orders.delete_order(order)
 
     {:noreply, stream_delete(socket, :orders, order)}
+  end
+
+  @impl true
+  def handle_event("submit", _params, socket) do
+    IO.inspect(_params, label: "OUTSIDE SUBMIT")
+    {:noreply, socket}
   end
 end

@@ -9,7 +9,7 @@
 
 <.table
   id="orders"
-  rows={@orders}
+  rows={@streams.orders}
   row_click={fn {_id, order} -> JS.navigate(~p"/orders/#{order}") end}
 >
   <:col :let={{_id, order}} label="Timestamp"><%= order.timestamp %></:col>
@@ -49,6 +49,5 @@
       action={@live_action}
       order={@order}
       patch={~p"/orders"}
-      recipes={@recipes}
     />
   </.modal>

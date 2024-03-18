@@ -11,4 +11,5 @@
 .new-order-table td {
     width: 0;
     padding: 1rem;
+    white-space: nowrap;
 }
