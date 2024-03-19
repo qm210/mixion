@@ -151,6 +151,14 @@ defmodule MixionWeb.OrderLive.NewOrder do
           end)
         end
       )
+      |> update(
+        :added,
+        fn added ->
+          added ++ [%JustAdded{bartender: bartender, recipe_id: recipe_id}]
+        end
+      )
+
+    IO.inspect socket.assigns.added, label: "Added"
 
     {:ok, socket}
   end
