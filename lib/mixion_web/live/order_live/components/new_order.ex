@@ -1,7 +1,13 @@
-defmodule MixionWeb.OrderLive.NewOrderComponent do
+defmodule MixionWeb.OrderLive.NewOrder do
   use MixionWeb, :live_component
 
   alias Mixion.Orders
+  import MixionWeb.OrderLive.UndoButton
+
+  defmodule JustAdded do
+    @enforce_keys [:recipe_id, :bartender]
+    defstruct [:recipe_id, :bartender]
+  end
 
   @impl true
   def mount(socket) do
@@ -16,6 +22,10 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
     #     {recipe.id, %{left: 0, right: 0}}
     #   end
     # )
+
+    added = []
+
+    # added = added ++ [%JustAdded{recipe_id: 1, bartender: :left}]
 
     counts = Enum.into(
       recipes,
@@ -42,6 +52,7 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
       |> assign(:recipes, recipes)
       |> assign(:counts, counts)
       |> assign(:bartenders, bartenders)
+      |> assign(:added, added)
     }
   end
 
@@ -67,7 +78,7 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
                     <.live_component
                       module = {MixionWeb.OrderLive.OrderCountButton}
                       id = {"count-#{recipe.id}-#{bartender}"}
-                      parent_pid = {self()}
+                      parent_id = {@id}
                       counts = {@counts[recipe.id]}
                       recipe_id = {recipe.id}
                       bartender = {bartender}
@@ -84,6 +95,15 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
       <.button class="w-full mt-4" phx-click="submit" phx-target={@myself}>
         Submit
       </.button>
+
+      <.undo_button
+        :if={Enum.any?(@added)}
+        target={@myself}
+      />
+
+      <div style="display: none">
+        Some Footer text only to show that the self-closing .undo_button does not destroy me.
+      </div>
     </div>
     """
   end
@@ -96,6 +116,43 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
      socket
      |> assign(assigns)
      |> assign_form(changeset)}
+  end
+
+  @impl true
+  def update(%{event: :increment_event, params: params} = assigns, socket) do
+    IO.inspect assigns, label: "NewOrder Assigns"
+
+    %{"bartender" => bartender} = params
+    recipe_id = String.to_integer(params["recipe_id"])
+
+    # current_count = Map.get(socket.assigns.counts, bartender, 0)
+    # Map.put(socket.assigns.counts, bartender, current_count + 1)
+
+    # &(&1 + 1) is a capturing expression, i.e. anonymous function
+    # &1 is the first argument passed to this function
+    # &() is the definition itself
+    # i.e. it is the same as fn x -> x + 1 end
+
+    # more fucked up way to write this...?
+    # socket = socket |> update(:counts, fn counts ->
+    #   counts
+    #   |> Map.get(bartender, 0)
+    #   |> Kernel.+(1)
+    #   |> (&Map.put(counts, bartender, &1)).()
+    # end)
+
+    socket = socket |>
+      update(
+        :counts,
+        fn counts ->
+          Map.update!(counts, recipe_id, fn count ->
+            key = String.to_atom(bartender)
+            Map.update!(count, key, &(&1 + 1))
+          end)
+        end
+      )
+
+    {:ok, socket}
   end
 
   @impl true
@@ -138,7 +195,6 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
     {:noreply, socket}
   end
 
-  @impl true
   def handle_info({:increment_event, params}, socket) do
     IO.inspect(params, label: "Outer increment_event handle_info")
     {:noreply, socket}
@@ -180,5 +236,13 @@ defmodule MixionWeb.OrderLive.NewOrderComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
+  # could also define the component here, but I used import ... and it worked.
+  # def undo_button(assigns) do
+  #   ~H"""
+  #   <.button class="mt-8 bg-red-500 w-full">
+  #     HAHAHA
+  #   </.button>
+  #   """
+  # end
 
 end

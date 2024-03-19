@@ -31,7 +31,7 @@ defmodule MixionWeb.OrderLive.OrderCountButton do
     # end)
 
     # send_update(
-    #   MixionWeb.OrderLive.NewOrderComponent,
+    #   MixionWeb.OrderLive.NewOrder,
     #   id: socket.id,
     #   event: "increment",
     #   params: params
@@ -49,12 +49,14 @@ defmodule MixionWeb.OrderLive.OrderCountButton do
     IO.inspect self(), label: "Self"
     IO.inspect socket.assigns, label: "Assigns"
 
-    send(self(), {:increment_event, params})
+    # send(self(), {:increment_event, params})
 
-    if Map.has_key?(socket.assigns, :parent_pid) do
+    if Map.has_key?(socket.assigns, :parent_id) do
+      # for the update, any combination of module + id is a key,
+      # i.e. these are treated as identical
       send_update(
-        MixionWeb.OrderLive.NewOrderComponent,
-        id: :new_order_component,
+        MixionWeb.OrderLive.NewOrder,
+        id: socket.assigns.parent_id,
         event: :increment_event,
         params: params
       )
